@@ -23,21 +23,27 @@ THE SOFTWARE.
 */
 #endregion
 
+using System.Collections;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Events;
+using KSP.UI;
+using TMPro;
 
 namespace BetterKerbNet
 {
-
 	public class KerbNetDevourerSettings : GameParameters.CustomParameterNode
 	{
 		private const string easyDescription = "The best possible FoV range and anomaly scanning chance is used for all KerbNet display modes";
 		private const string medDescription = "The best FoV range and anomaly scanning chance are calculated separately for each KerbNet display mode";
-		private const string hardDescription = "Individual KerbNet scanning modules are used to set the FoV range ane anomaly scanning chance for each display mode";
+		private const string hardDescription = "Individual KerbNet scanning modules are used to set the FoV range and anomaly scanning chance for each display mode";
 
+		[GameParameters.CustomStringParameterUI("", lines = 3, autoPersistance = false)]
+		public string Reload = "KerbNet must be closed and restarted for changes to take effect.";
 		[GameParameters.CustomIntParameterUI("FoV Difficulty", toolTip = "", minValue = 0, maxValue = 2, autoPersistance = true)]
 		public int setting = 1;
-		[GameParameters.CustomStringParameterUI("Selected Mode:", lines = 4, autoPersistance = false)]
+		[GameParameters.CustomStringParameterUI("Selected Mode", lines = 4, autoPersistance = false)]
 		public string description;
 		[GameParameters.CustomParameterUI("Show Tooltips", autoPersistance = true)]
 		public bool showTooltips = true;
@@ -49,6 +55,31 @@ namespace BetterKerbNet
 		public bool rememberOverlay;
 		[GameParameters.CustomParameterUI("Remember Auto-Refresh Setting", autoPersistance = true)]
 		public bool autoRefresh;
+		[GameParameters.CustomParameterUI("Add Map Orientation Button", autoPersistance = true)]
+		public bool orientationButton;
+		[GameParameters.CustomFloatParameterUI("Scale", toolTip = "Adjust the UI scale for the KerbNet window", minValue = 0.5f, maxValue = 4, displayFormat = "P0", autoPersistance = true)]
+		public float scale = 1;
+		[GameParameters.CustomParameterUI("Use As Default", autoPersistance = false)]
+		public bool useAsDefault;
+
+		public KerbNetDevourerSettings()
+		{
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			{
+				if (KerbNetPersistence.Instance == null)
+					return;
+
+				showTooltips = KerbNetPersistence.Instance.showTooltips;
+				rememberFoV = KerbNetPersistence.Instance.rememberFoV;
+				rememberMode = KerbNetPersistence.Instance.rememberMode;
+				rememberOverlay = KerbNetPersistence.Instance.rememberOverlay;
+				autoRefresh = KerbNetPersistence.Instance.autoRefresh;
+				orientationButton = KerbNetPersistence.Instance.orientationButton;
+				scale = KerbNetPersistence.Instance.scale;
+			}
+
+			useAsDefault = false;
+		}
 
 		public override GameParameters.GameMode GameMode
 		{
@@ -98,19 +129,24 @@ namespace BetterKerbNet
 
 		public override bool Enabled(MemberInfo member, GameParameters parameters)
 		{
-			switch(setting)
+			if (member.Name == "description")
 			{
-				case 0:
-				default:
-					description = easyDescription;
-					break;
-				case 1:
-					description = medDescription;
-					break;
-				case 2:
-					description = hardDescription;
-					break;
+				switch (setting)
+				{
+					case 0:
+					default:
+						description = easyDescription;
+						break;
+					case 1:
+						description = medDescription;
+						break;
+					case 2:
+						description = hardDescription;
+						break;
+				}
 			}
+			else if (member.Name == "Reload")
+				return HighLogic.LoadedSceneIsFlight;
 
 			return true;
 		}
