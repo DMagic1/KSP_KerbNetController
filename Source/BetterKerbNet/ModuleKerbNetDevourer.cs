@@ -52,17 +52,36 @@ namespace BetterKerbNet
 		private KerbNetDialog _dialog;
 		private KerbNetDevourerSettings _settings;
 		private UIStateButton[] _stateButtons;
+		private UIStateButton _orientButton;
 		private Button[] _dialogButtons;
 		private static string _autoRefreshState;
 		private static string _currentMode;
 		private static string _visibilityMode;
 		private static float _currentFoV;
+		private static Sprite _northSprite;
+		private static Sprite _orbitSprite;
 
 		public ModuleKerbNetDevourer(Vessel v)
 		{
 			_activeVessel = v;
 
 			_settings = HighLogic.CurrentGame.Parameters.CustomParams<KerbNetDevourerSettings>();
+
+			if (_northSprite == null)
+			{
+				Texture2D _north = GameDatabase.Instance.GetTexture("KerbNetController/Resources/North_Up", false);
+
+				if (_north != null)
+					_northSprite = Sprite.Create(_north, new Rect(0, 0, _north.width, _north.height), new Vector2(0.5f, 0.5f));
+			}
+
+			if (_orbitSprite == null)
+			{
+				Texture2D _orbit = GameDatabase.Instance.GetTexture("KerbNetController/Resources/Orbit_Up", false);
+
+				if (_orbit != null)
+					_orbitSprite = Sprite.Create(_orbit, new Rect(0, 0, _orbit.width, _orbit.height), new Vector2(0.5f, 0.5f));
+			}
 			
 			if (SimpleScan())
 			{
@@ -103,12 +122,11 @@ namespace BetterKerbNet
 
 			_dialog = KerbNetDialog.Display(this);
 
+			_dialog.transform.localScale *= _settings.scale;
+
 			AddModeListener();
 
 			SetCloseListener();
-
-			if (!_settings.showTooltips)
-				KillTooltips();
 
 			if (_settings.rememberOverlay)
 				SetOverlayListener();
@@ -118,6 +136,12 @@ namespace BetterKerbNet
 
 			if (_settings.rememberFoV)
 				SetFoVListener();
+
+			if (_settings.orientationButton)
+				SetOrientationButton();
+
+			if (!_settings.showTooltips)
+				KillTooltips();
 
 			UpdateDisplay();
 		}
@@ -180,7 +204,7 @@ namespace BetterKerbNet
 
 			var accessors = _activeVessel.FindPartModulesImplementing<IAccessKerbNet>();
 
-			MonoBehaviour.print("[KND] Scanning Vessel [" + _activeVessel.vesselName + "]... Found [" + accessors.Count + "] KerbNet Parts");
+			MonoBehaviour.print("[KerbNet Controller] Scanning Vessel [" + _activeVessel.vesselName + "]... Found [" + accessors.Count + "] KerbNet Parts");
 
 			for (int i = accessors.Count - 1; i >= 0; i--)
 			{
@@ -422,6 +446,68 @@ namespace BetterKerbNet
 			}
 		}
 
+		private void SetOrientationButton()
+		{
+			if (_dialog == null)
+				return;
+
+			if (_stateButtons == null)
+				return;
+
+			UIStateButton refreshButton = _stateButtons[2];
+
+			GameObject parent = refreshButton.transform.parent.gameObject;			
+
+			GameObject outline = MonoBehaviour.Instantiate(parent, parent.transform.parent) as GameObject;
+
+			outline.name = "Outline_Orientation";
+
+			FieldInfo disableField = typeof(KerbNetDialog).GetField("disableOnError", BindingFlags.NonPublic | BindingFlags.Instance);
+
+			var disableObjects = disableField.GetValue(_dialog) as GameObject[];
+
+			if (disableObjects != null)
+			{
+				List<GameObject> disableList = disableObjects.ToList();
+
+				disableList.Add(outline);
+
+				disableField.SetValue(_dialog, disableList.ToArray());
+			}
+
+			GameObject child = outline.GetChild("Button_Auto_Refresh");
+
+			if (child != null)
+			{
+				child.transform.SetParent(null);
+				MonoBehaviour.DestroyImmediate(child);
+			}
+
+			_orientButton = MonoBehaviour.Instantiate(refreshButton, outline.transform) as UIStateButton;
+
+			_orientButton.name = "Button_Orientation";
+
+			RectTransform rect = outline.GetComponent<RectTransform>();
+
+			if (rect != null)
+				rect.anchoredPosition = new Vector2(rect.anchoredPosition.x + rect.rect.width, rect.anchoredPosition.y);
+
+			TooltipController_Text tooltip = outline.GetComponentInChildren<TooltipController_Text>();
+
+			if (tooltip != null)
+				tooltip.textString = "Toggle Map Orientation";
+
+			_orientButton.states = new ButtonState[]
+			{
+				new ButtonState() {name = "north_up", normal = _northSprite},
+				new ButtonState() {name = "orbit_up", normal = _orbitSprite}
+			};
+
+			_orientButton.SetState(GameSettings.KERBNET_ALIGNS_WITH_ORBIT ? "orbit_up" : "north_up", false);
+
+			_orientButton.onValueChanged.AddListener(new UnityAction<UIStateButton>(OnOrientationChange));
+		}
+
 		private void OnClose()
 		{
 			_dialog = null;
@@ -440,6 +526,20 @@ namespace BetterKerbNet
 		{
 			if (_settings.autoRefresh)
 				_autoRefreshState = button.currentState;
+		}
+
+		private void OnOrientationChange(UIStateButton button)
+		{
+			if (!_settings.orientationButton)
+				return;
+
+			if (button.currentState == "north_up")
+				GameSettings.KERBNET_ALIGNS_WITH_ORBIT = false;
+			else if (button.currentState == "orbit_up")
+				GameSettings.KERBNET_ALIGNS_WITH_ORBIT = true;
+
+			if (_dialog != null)
+				UpdateDisplay();
 		}
 
 		private void OnFoVChange(float value)
@@ -509,21 +609,21 @@ namespace BetterKerbNet
 
 		public float GetKerbNetAnomalyChance()
 		{
-			//MonoBehaviour.print("[KND] Get Anomaly: " + _currentAnomaly.ToString("N2"));
+			//MonoBehaviour.print("[KerbNet Controller] Get Anomaly: " + _currentAnomaly.ToString("N2"));
 
 			return _currentAnomaly;
 		}
 
 		public List<string> GetKerbNetDisplayModes()
 		{
-			//MonoBehaviour.print("[KND] Get Modes: " + _kerbnets.Count);
+			//MonoBehaviour.print("[KerbNet Controller] Get Modes: " + _kerbnets.Count);
 
 			return new List<string>(_kerbnets.Keys);
 		}
 
 		public string GetKerbNetErrorState()
 		{
-			//MonoBehaviour.print("[KND] Get Error State");
+			//MonoBehaviour.print("[KerbNet Controller] Get Error State");
 
 			if (_currentInterface != null)
 				return _currentInterface.GetKerbNetErrorState();
@@ -533,28 +633,28 @@ namespace BetterKerbNet
 
 		public float GetKerbNetMaximumFoV()
 		{
-			//MonoBehaviour.print("[KND] Get Max Fov: " + _currentMaxFoV.ToString("N2"));
+			//MonoBehaviour.print("[KerbNet Controller] Get Max Fov: " + _currentMaxFoV.ToString("N2"));
 
 			return _currentMaxFoV;
 		}
 
 		public float GetKerbNetMinimumFoV()
 		{
-			//MonoBehaviour.print("[KND] Get Min Fov: " + _currentMinFoV.ToString("N2"));
+			//MonoBehaviour.print("[KerbNet Controller] Get Min Fov: " + _currentMinFoV.ToString("N2"));
 
 			return _currentMinFoV;
 		}
 
 		public Part GetKerbNetPart()
 		{
-			//MonoBehaviour.print("[KND] Get Part: " + _currentPart.partInfo.title);
+			//MonoBehaviour.print("[KerbNet Controller] Get Part: " + _currentPart.partInfo.title);
 
 			return _currentPart; ;
 		}
 
 		public Vessel GetKerbNetVessel()
 		{
-			//MonoBehaviour.print("[KND] Get Vessel: " + _activeVessel.vesselName);
+			//MonoBehaviour.print("[KerbNet Controller] Get Vessel: " + _activeVessel.vesselName);
 
 			return _activeVessel;
 		}
