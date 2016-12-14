@@ -57,7 +57,7 @@ namespace BetterKerbNet
 		public bool autoRefresh;
 		[GameParameters.CustomParameterUI("Add Map Orientation Button", autoPersistance = true)]
 		public bool orientationButton;
-		[GameParameters.CustomFloatParameterUI("Scale", toolTip = "Adjust the UI scale for the KerbNet window", minValue = 0.5f, maxValue = 4, displayFormat = "P0", autoPersistance = true)]
+		[GameParameters.CustomFloatParameterUI("Scale", toolTip = "Adjust the UI scale for the KerbNet window", asPercentage = true, minValue = 0.5f, maxValue = 4, displayFormat = "N1", autoPersistance = true)]
 		public float scale = 1;
 		[GameParameters.CustomParameterUI("Use As Default", autoPersistance = false)]
 		public bool useAsDefault;
