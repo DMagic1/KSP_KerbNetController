@@ -79,6 +79,8 @@ namespace BetterKerbNet
 
 		private void OnDestroy()
 		{
+			instance = null;
+
 			GameEvents.onGUIApplicationLauncherUnreadifying.Remove(RemoveButton);
 			GameEvents.onVesselWasModified.Remove(onVesselModified);
 			GameEvents.onVesselSituationChange.Remove(onSituationChange);
