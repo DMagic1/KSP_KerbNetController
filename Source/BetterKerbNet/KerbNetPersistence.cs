@@ -63,7 +63,10 @@ namespace BetterKerbNet
 		private void Awake()
 		{
 			if (loaded)
+			{
 				Destroy(gameObject);
+				return;
+			}
 
 			DontDestroyOnLoad(gameObject);
 
@@ -76,6 +79,11 @@ namespace BetterKerbNet
 
 			if (Load())
 				print("[KerbNet Controller] Settings file loaded");
+			else
+			{
+				if (Save())
+					print("[KerbNet Controller] New Settings files generated at:\n" + fullPath);
+			}
 		}
 
 		private void OnDestroy()
