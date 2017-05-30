@@ -41,26 +41,26 @@ namespace BetterKerbNet
 
 		[GameParameters.CustomStringParameterUI("", lines = 3, autoPersistance = false)]
 		public string Reload = "KerbNet must be closed and restarted for changes to take effect.";
-		[GameParameters.CustomIntParameterUI("FoV Difficulty", toolTip = "", minValue = 0, maxValue = 2, autoPersistance = true)]
+		[GameParameters.CustomIntParameterUI("FoV Difficulty", minValue = 0, maxValue = 2, autoPersistance = true)]
 		public int setting = 1;
 		[GameParameters.CustomStringParameterUI("Selected Mode", lines = 4, autoPersistance = false)]
 		public string description;
 		[GameParameters.CustomParameterUI("Show Tooltips", autoPersistance = true)]
 		public bool showTooltips = true;
-		[GameParameters.CustomParameterUI("Remember Last FoV Value", autoPersistance = true)]
-		public bool rememberFoV;
+		[GameParameters.CustomParameterUI("Remember Last FoV Value", toolTip = "Automatically start with the last selected FoV value", autoPersistance = true)]
+		public bool rememberFoV = false;
 		[GameParameters.CustomParameterUI("Remember Last Display Mode", toolTip = "Automatically start in the same display mode as when last used", autoPersistance = true)]
-		public bool rememberMode;
+		public bool rememberMode = false;
 		[GameParameters.CustomParameterUI("Remember Last Overlay Mode", toolTip = "Automatically adjust the grid overlay to that when last used", autoPersistance = true)]
-		public bool rememberOverlay;
-		[GameParameters.CustomParameterUI("Remember Auto-Refresh Setting", autoPersistance = true)]
-		public bool autoRefresh;
-		[GameParameters.CustomParameterUI("Add Map Orientation Button", autoPersistance = true)]
-		public bool orientationButton;
+		public bool rememberOverlay = false;
+		[GameParameters.CustomParameterUI("Remember Auto-Refresh Setting", toolTip = "Automatically adjust the auto-refresh setting", autoPersistance = true)]
+		public bool autoRefresh = false;
+		[GameParameters.CustomParameterUI("Add Map Orientation Button", toolTip = "Adds a button to toggle between orbit-up and north-up orientations", autoPersistance = true)]
+		public bool orientationButton = false;
 		[GameParameters.CustomFloatParameterUI("Scale", toolTip = "Adjust the UI scale for the KerbNet window", asPercentage = true, minValue = 0.5f, maxValue = 4, displayFormat = "N1", autoPersistance = true)]
 		public float scale = 1;
-		[GameParameters.CustomParameterUI("Use As Default", autoPersistance = false)]
-		public bool useAsDefault;
+		[GameParameters.CustomParameterUI("Use As Default", toolTip = "Save these settings to a file on disk to be used as defaults for newly created games", autoPersistance = false)]
+		public bool useAsDefault = false;
 
 		public KerbNetDevourerSettings()
 		{
@@ -92,6 +92,11 @@ namespace BetterKerbNet
 		}
 
 		public override string Section
+		{
+			get { return "DMagic Mods"; }
+		}
+
+		public override string DisplaySection
 		{
 			get { return "DMagic Mods"; }
 		}
