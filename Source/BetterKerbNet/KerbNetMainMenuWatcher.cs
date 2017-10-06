@@ -58,20 +58,9 @@ namespace BetterKerbNet
 
 			var buttons = GameObject.FindObjectsOfType<Button>();
 
-			for (int i = buttons.Length - 1; i >= 0; i--)
+			if (buttons.Length > 0)
 			{
-				Button button = buttons[i];
-
-				if (button == null)
-					continue;
-
-				TextMeshProUGUI tmp = button.GetComponentInChildren<TextMeshProUGUI>();
-
-				if (tmp == null)
-					continue;
-
-				if (tmp.text != "Start!")
-					continue;
+				var button = buttons[buttons.Length - 1];
 
 				button.onClick.AddListener(new UnityAction(onSettingsApply));
 			}
