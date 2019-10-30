@@ -93,12 +93,12 @@ namespace BetterKerbNet
 
 		public override string Section
 		{
-			get { return "DMagic Mods"; }
+			get { return "Kerbnet Controller"; }
 		}
 
 		public override string DisplaySection
 		{
-			get { return "DMagic Mods"; }
+			get { return "Kerbnet Controller"; }
 		}
 
 		public override int SectionOrder
